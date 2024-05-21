@@ -25,9 +25,12 @@ def sanitize_filename(title):
     return re.sub(invalid_chars, '-', title)
 
 def clean_html_tags(text):
-    # Remove all HTML tags
-    clean_text = re.sub(r'<[^>]+>', '', text)
-    return clean_text
+    # Replace <div> with newlines and remove all other HTML tags
+    text = re.sub(r'<div>', '\n', text)
+    text = re.sub(r'</div>', '', text)
+    text = re.sub(r'<br\s*/?>', '\n', text)  # handle <br> and <br/>
+    text = re.sub(r'<[^>]+>', '', text)  # remove all other HTML tags
+    return text.strip()
 
 def process_file(file_path):
     tree = ET.parse(file_path)
@@ -41,7 +44,6 @@ def process_file(file_path):
                 note.title = sanitize_filename(child.text) + ".txt"
             elif child.tag == 'content':
                 note.contents = child.text.strip()
-                note.contents = note.contents.replace("<br/>", "\n")
                 # Remove unnecessary XML tags of head and tail
                 note.contents = re.sub(r"<\?xml(.+?)<en-note>", "", note.contents, flags=re.DOTALL)
                 note.contents = re.sub(r"</en-note>", "", note.contents, flags=re.DOTALL)
